@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Clients — GUILLAUME HUNAULT (Jazz - Lyon Mag)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; font-size: 13px; }
+header {
+  background: linear-gradient(135deg, #1F3864, #2E75B6);
+  color: white; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+header h1 { font-size: 1.05rem; font-weight: bold; }
+header small { font-size: 0.72rem; opacity: 0.75; }
+.toolbar {
+  background: white; padding: 10px 20px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  border-bottom: 2px solid #e2e8f0;
+}
+input[type="text"], input[type="number"] {
+  border: 1px solid #cbd5e0; border-radius: 6px;
+  padding: 6px 10px; font-size: 0.82rem; outline: none;
+}
+input:focus { border-color: #2E75B6; }
+#search { flex: 1; min-width: 180px; }
+.stats-bar {
+  background: #1F3864; color: white;
+  padding: 10px 20px; display: flex; gap: 0; flex-wrap: wrap;
+}
+.stat { text-align: center; padding: 4px 14px; border-right: 1px solid rgba(255,255,255,0.15); }
+.stat:last-child { border-right: none; }
+.stat-val { font-size: 1.1rem; font-weight: bold; white-space: nowrap; }
+.stat-lbl { font-size: 0.63rem; opacity: 0.75; margin-top: 1px; }
+.obj-block {
+  background: #e8f0fe; border-left: 4px solid #2E75B6;
+  padding: 10px 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+.obj-item { display: flex; flex-direction: column; align-items: center; }
+.obj-item strong { font-size: 1rem; color: #1F3864; }
+.obj-item span { font-size: 0.68rem; color: #555; }
+.reste-neg { color: #C00000 !important; }
+.reste-pos { color: #1A7F4B !important; }
+.obj-bar-wrap { flex: 1; min-width: 240px; padding: 4px 0; }
+.obj-bar-label { font-size: 0.7rem; color: #555; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.obj-bar-bg { background: #cbd5e0; border-radius: 10px; height: 14px; overflow: hidden; }
+.obj-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s; }
+.pistes-block {
+  background: #fff8e1; border-left: 4px solid #FFD700;
+  padding: 10px 20px;
+}
+.pistes-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.pistes-header h3 { font-size: 0.85rem; color: #7B5800; font-weight: bold; }
+.piste-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.piste-form input[type="text"] { min-width: 200px; }
+.piste-form input[type="number"] { width: 120px; }
+.add-piste-btn {
+  padding: 6px 14px; border-radius: 6px; border: none;
+  background: #F9A825; cursor: pointer; font-size: 0.82rem; color: white; font-weight: bold;
+}
+.add-piste-btn:hover { background: #F57F17; }
+.piste-list { display: flex; flex-direction: column; gap: 4px; }
+.piste-item {
+  display: flex; align-items: center; gap: 8px;
+  background: white; border: 1px solid #F9A825;
+  border-radius: 6px; padding: 5px 10px; font-size: 0.8rem;
+}
+.piste-item .piste-nom { flex: 1; font-weight: bold; color: #1F3864; }
+.piste-item .piste-mt { font-family: monospace; color: #1A7F4B; font-weight: bold; }
+.piste-del { cursor: pointer; color: #C00000; font-size: 1rem; background: none; border: none; margin-left: auto; }
+.piste-total { font-weight: bold; font-size: 0.85rem; color: #7B5800; }
+.filter-bar {
+  display: flex; gap: 6px; padding: 8px 20px;
+  background: #f7fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; align-items: center;
+}
+.filter-btn {
+  padding: 4px 12px; border-radius: 20px; border: 1.5px solid #cbd5e0;
+  background: white; cursor: pointer; font-size: 0.76rem; font-weight: bold; white-space: nowrap;
+}
+.filter-btn:hover { border-color: #2E75B6; color: #2E75B6; }
+.filter-btn.active { background: #2E75B6; color: white; border-color: #2E75B6; }
+.col-toggle-wrap { margin-left: auto; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.col-toggle-wrap label { font-size: 0.72rem; color: #555; display: flex; align-items: center; gap: 3px; cursor: pointer; }
+.count-info { font-size: 0.75rem; color: #666; padding: 4px 20px 0; }
+.table-wrap { padding: 12px 20px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.08); font-size: 0.8rem; }
+thead tr { background: #1F3864; color: white; }
+th { padding: 9px 10px; text-align: left; font-size: 0.77rem; font-weight: bold; cursor: pointer; user-select: none; white-space: nowrap; }
+th:hover { background: #2E75B6; }
+tbody tr { border-bottom: 1px solid #f0f4f8; transition: background 0.1s; }
+tbody tr:hover { background: #f7fafc; }
+tbody tr.row-perdu { background: #FFF8F8; }
+tbody tr.row-nouveau { background: #F9F5FF; }
+tbody tr.row-piste { background: #FFFDE7; }
+td { padding: 7px 10px; vertical-align: middle; }
+.client-name { font-weight: bold; color: #1F3864; font-size: 0.8rem; }
+.num { text-align: right; font-family: monospace; white-space: nowrap; }
+.num-pos { color: #1A7F4B; }
+.num-neg { color: #C00000; }
+.num-zero { color: #bbb; }
+.status-pill { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 0.68rem; font-weight: bold; white-space: nowrap; }
+.sp-actif   { background: #E2EFDA; color: #1A7F4B; }
+.sp-hausse  { background: #E2EFDA; color: #1A7F4B; }
+.sp-baisse  { background: #FCE4D6; color: #C00000; }
+.sp-perdu   { background: #FFEBEE; color: #B71C1C; }
+.sp-nouveau { background: #EDE7F6; color: #6B2D8B; }
+.sp-offre   { background: #DEEAF1; color: #1F3864; }
+.sp-ca26    { background: #E2EFDA; color: #1A7F4B; }
+.sp-piste   { background: #FFF3CD; color: #7B5800; }
+.comment-text {
+  width: 100%; min-width: 140px; border: 1px solid transparent;
+  border-radius: 4px; padding: 3px 5px; font-size: 0.76rem;
+  background: transparent; resize: vertical; min-height: 28px;
+  font-family: Arial; color: #333;
+}
+.comment-text:focus { border-color: #2E75B6; background: #fff; outline: none; }
+.comment-text.has-comment { background: #FFFDE7; border-color: #F9A825; }
+.pot-input {
+  width: 100px; text-align: right; border: 1px solid #cbd5e0;
+  border-radius: 5px; padding: 4px 6px; font-size: 0.78rem;
+  font-family: monospace; background: #FFFDE7; outline: none;
+}
+.pot-input:focus { border-color: #F9A825; }
+.hidden-col { display: none; }
+.save-btn {
+  position: fixed; bottom: 20px; right: 20px;
+  background: #1A7F4B; color: white; border: none;
+  padding: 10px 20px; border-radius: 30px; font-size: 0.85rem;
+  font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: background 0.2s; z-index: 100;
+}
+.save-btn:hover { background: #145f38; }
+.save-btn.saved { background: #2E75B6; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 Suivi Clients — GUILLAUME HUNAULT (Jazz - Lyon Mag)</h1>
+  <small id="last-save">Données sauvegardées localement</small>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="🔍 Rechercher un client..." />
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val" id="s-ca24">—</div><div class="stat-lbl">CA 2024</div></div>
+  <div class="stat"><div class="stat-val" id="s-ca25">—</div><div class="stat-lbl">CA 2025</div></div>
+  <div class="stat"><div class="stat-val" id="s-ca26" style="color:#FFD700">—</div><div class="stat-lbl">CA 2026 signé</div></div>
+  <div class="stat"><div class="stat-val" id="s-pot" style="color:#98FB98">—</div><div class="stat-lbl">Potentiel saisi</div></div>
+  <div class="stat"><div class="stat-val" id="s-pistes" style="color:#FFA07A">—</div><div class="stat-lbl">Pistes 2026</div></div>
+  <div class="stat"><div class="stat-val" id="s-total" style="color:#87CEEB">—</div><div class="stat-lbl">Total prévisionnel</div></div>
+  <div class="stat"><div class="stat-val" id="s-actifs">—</div><div class="stat-lbl">Actifs 2025</div></div>
+  <div class="stat"><div class="stat-val" id="s-perdus">—</div><div class="stat-lbl">Perdus</div></div>
+</div>
+
+<div class="obj-block" id="obj-block" style="display:none">
+  <div class="obj-item"><strong id="o-obj">—</strong><span>Objectif 2026</span></div>
+  <div class="obj-item"><strong id="o-signe" style="color:#1A7F4B">—</strong><span>Signé 2026</span></div>
+  <div class="obj-item"><strong id="o-prev" style="color:#2E75B6">—</strong><span>Prévisionnel</span></div>
+  <div class="obj-item"><strong id="o-reste">—</strong><span>Reste à faire</span></div>
+  <div class="obj-bar-wrap">
+    <div class="obj-bar-label"><span>Avancement objectif</span><span id="o-pct">0%</span></div>
+    <div class="obj-bar-bg"><div class="obj-bar-fill" id="o-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="pistes-block">
+  <div class="pistes-header">
+    <h3>⭐ Pistes commerciales 2026</h3>
+    <span class="piste-total">Total : <strong id="piste-total-val">0 €</strong></span>
+  </div>
+  <div class="piste-form">
+    <input type="text" id="piste-nom" placeholder="Nom de la piste / prospect" />
+    <input type="number" id="piste-mt" placeholder="Montant € prévisionnel" min="0" step="100" />
+    <button class="add-piste-btn" onclick="addPiste()">✚ Ajouter</button>
+  </div>
+  <div class="piste-list" id="piste-list"></div>
+</div>
+
+<div class="filter-bar">
+  <span style="font-size:0.78rem;font-weight:bold;color:#1F3864;">Filtre :</span>
+  <button class="filter-btn active" data-filter="all">Tous</button>
+  <button class="filter-btn" data-filter="actif">Actifs 2025</button>
+  <button class="filter-btn" data-filter="perdu">Perdus</button>
+  <button class="filter-btn" data-filter="nouveau">Nouveaux</button>
+  <button class="filter-btn" data-filter="ca26">CA 2026</button>
+  <button class="filter-btn" data-filter="offre">Avec offre</button>
+  <button class="filter-btn" data-filter="pot">Avec potentiel</button>
+  <button class="filter-btn" data-filter="comment">Avec commentaire</button>
+  <button class="filter-btn" data-filter="piste">Pistes</button>
+  <div class="col-toggle-wrap">
+    <span style="font-size:0.72rem;color:#888;margin-right:4px;">Colonnes :</span>
+    <label><input type="checkbox" class="col-cb" data-col="col-ca24" checked> 2024</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-ca25" checked> 2025</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-ca26" checked> CA 2026</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-evol" checked> Évol.</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-off24"> Off.2024</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-off25"> Off.2025</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-off26" checked> Off.2026</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-statut" checked> Statut</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-comment" checked> Commentaire</label>
+    <label><input type="checkbox" class="col-cb" data-col="col-pot" checked> Potentiel</label>
+  </div>
+</div>
+
+<div class="count-info" id="count-info"></div>
+<div class="table-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable('Client')">Client ↕</th>
+        <th class="col-ca24 num" onclick="sortTable('CA_2024')">CA 2024 ↕</th>
+        <th class="col-ca25 num" onclick="sortTable('CA_2025')">CA 2025 ↕</th>
+        <th class="col-ca26 num" onclick="sortTable('CA_2026')">CA 2026 signé ↕</th>
+        <th class="col-evol num">Évol. 24→25</th>
+        <th class="col-off24 num" onclick="sortTable('Off_2024')">Off.2024 ↕</th>
+        <th class="col-off25 num" onclick="sortTable('Off_2025')">Off.2025 ↕</th>
+        <th class="col-off26 num" onclick="sortTable('Off_2026')">Off.2026 ↕</th>
+        <th class="col-statut">Statut</th>
+        <th class="col-comment" style="min-width:170px">Commentaire</th>
+        <th class="col-pot num" style="min-width:110px" onclick="sortTable('pot')">Potentiel 2026 ↕</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<button class="save-btn" id="save-btn" onclick="saveAll()">💾 Sauvegarder</button>
+
+<script>
+const COMM = "GUILLAUME HUNAULT (Jazz - Lyon Mag)";
+const DATA = [{"Client": "RADIANCE MUTUELLE", "CA_2024": 0.0, "CA_2025": 41411.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 9058.0, "Off_2026": 0.0, "Total_CA": 41411.0}, {"Client": "COMMUNE DE BRON", "CA_2024": 3142.0, "CA_2025": 34877.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 38019.0}, {"Client": "GIE ORPI LYON", "CA_2024": 0.0, "CA_2025": 27673.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 27673.0}, {"Client": "GL EVENTS", "CA_2024": 6413.0, "CA_2025": 10008.0, "CA_2026": 9063.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 10015.01, "Total_CA": 25484.0}, {"Client": "CYBÈLE PRODUCTION", "CA_2024": 13401.0, "CA_2025": 6956.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1385.51, "Off_2026": 0.0, "Total_CA": 20357.0}, {"Client": "MAIRIE DE TASSIN LA DEMI LUNE", "CA_2024": 5922.0, "CA_2025": 6890.0, "CA_2026": 1710.0, "Off_2024": 0.0, "Off_2025": 2900.0, "Off_2026": 0.0, "Total_CA": 14522.0}, {"Client": "PATHE CINEMAS FRANCE / CINÉMA PATHÉ BELLECOUR", "CA_2024": 6120.0, "CA_2025": 5600.0, "CA_2026": 0.0, "Off_2024": 60.0, "Off_2025": 1900.0, "Off_2026": 2800.0, "Total_CA": 11720.0}, {"Client": "FESTIVAL DE LA CERISE", "CA_2024": 0.0, "CA_2025": 5089.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 5089.0}, {"Client": "HIFI LINK", "CA_2024": 7830.0, "CA_2025": 4898.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 12728.0}, {"Client": "BARRET MAROQUINERIE", "CA_2024": 6275.0, "CA_2025": 4503.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 10778.0}, {"Client": "BRUYERE RAOUL", "CA_2024": 0.0, "CA_2025": 3974.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2410.92, "Off_2026": 0.0, "Total_CA": 3974.0}, {"Client": "DEPARTEMENT DU RHONE", "CA_2024": 8010.0, "CA_2025": 3948.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1450.0, "Off_2026": 0.0, "Total_CA": 11958.0}, {"Client": "LA MAISON DE LA DANSE", "CA_2024": 550.0, "CA_2025": 3187.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 10500.0, "Off_2026": 0.0, "Total_CA": 3737.0}, {"Client": "THEATRE DES CELESTINS DE LYON", "CA_2024": 550.0, "CA_2025": 3151.0, "CA_2026": 1415.0, "Off_2024": 0.0, "Off_2025": 2160.0, "Off_2026": 0.0, "Total_CA": 5116.0}, {"Client": "LA MOUCHE", "CA_2024": 375.0, "CA_2025": 2859.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3234.0}, {"Client": "COMMUNE DE GENAS", "CA_2024": 0.0, "CA_2025": 2627.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2627.0}, {"Client": "MINERALYON ORGANISATION", "CA_2024": 0.0, "CA_2025": 2405.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2405.0}, {"Client": "PATRIMOINE ET INITIATIVES DOREENNES", "CA_2024": 0.0, "CA_2025": 2175.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2175.0}, {"Client": "LYON GOSPEL FESTIVAL", "CA_2024": 1654.0, "CA_2025": 2132.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1216.58, "Total_CA": 3786.0}, {"Client": "LE COMPLEXE DU RIRE", "CA_2024": 0.0, "CA_2025": 1997.0, "CA_2026": 2346.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2304.0, "Total_CA": 4343.0}, {"Client": "LES NUITS DE FOURVIERE", "CA_2024": 0.0, "CA_2025": 1710.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1710.0}, {"Client": "OGIC", "CA_2024": 0.0, "CA_2025": 1641.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1641.0}, {"Client": "MAIRIE DE SAINTE FOY LES LYON", "CA_2024": 1620.0, "CA_2025": 1620.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3240.0}, {"Client": "ANIM'LOISIRS", "CA_2024": 0.0, "CA_2025": 1615.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 16497.61, "Off_2026": 0.0, "Total_CA": 1615.0}, {"Client": "OFFICE DU TOURISME DE L'ALBRET", "CA_2024": 5639.0, "CA_2025": 1584.0, "CA_2026": 1951.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 9174.0}, {"Client": "COMOBEX SAS", "CA_2024": 4829.0, "CA_2025": 1520.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 6349.0}, {"Client": "DEPARTEMENT DE L AIN", "CA_2024": 0.0, "CA_2025": 1453.0, "CA_2026": 1615.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2900.0, "Total_CA": 3068.0}, {"Client": "COVIDIS SAS", "CA_2024": 594.0, "CA_2025": 1445.0, "CA_2026": 596.0, "Off_2024": 0.0, "Off_2025": 1885.0, "Off_2026": 1641.54, "Total_CA": 2635.0}, {"Client": "S.C.I. ESPACE GERSON", "CA_2024": 1100.0, "CA_2025": 1435.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 487.5, "Total_CA": 2535.0}, {"Client": "CGR CINEMAS", "CA_2024": 0.0, "CA_2025": 1400.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1400.0}, {"Client": "THEATRE DE LA RENAISSANCE", "CA_2024": 1650.0, "CA_2025": 1386.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3036.0}, {"Client": "THÉÂTRE THÉO ARGENCE SAINT-PRIEST", "CA_2024": 550.0, "CA_2025": 1100.0, "CA_2026": 2350.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2142.0, "Total_CA": 4000.0}, {"Client": "ECRANS MIXTES", "CA_2024": 0.0, "CA_2025": 1100.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1850.0, "Off_2026": 0.0, "Total_CA": 1100.0}, {"Client": "DEVELINK", "CA_2024": 0.0, "CA_2025": 990.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 990.0}, {"Client": "MONTCHAT SUSHI", "CA_2024": 0.0, "CA_2025": 990.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 990.0}, {"Client": "OFFICE DE TOURISME TERRE VALSERINE", "CA_2024": 0.0, "CA_2025": 990.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2610.0, "Total_CA": 990.0}, {"Client": "THEATRE NOUVELLE GENERATION", "CA_2024": 468.0, "CA_2025": 990.0, "CA_2026": 1050.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2508.0}, {"Client": "GADAGNE", "CA_2024": 375.0, "CA_2025": 943.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1455.52, "Off_2026": 0.0, "Total_CA": 1318.0}, {"Client": "REGIE SAINT PIERRE", "CA_2024": 0.0, "CA_2025": 900.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 900.0}, {"Client": "CHÂTEAU GRANDCLÉMENT", "CA_2024": 0.0, "CA_2025": 900.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1852.31, "Off_2026": 0.0, "Total_CA": 900.0}, {"Client": "PLAISIR ACADEMIE : ESCAPE GAME", "CA_2024": 0.0, "CA_2025": 891.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 891.0}, {"Client": "MONSIEUR CECYL TARLIER", "CA_2024": 0.0, "CA_2025": 891.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 891.0}, {"Client": "SWING SOUS LES ETOILES", "CA_2024": 0.0, "CA_2025": 871.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 871.0}, {"Client": "SILOWE GOSPEL CONCEPT", "CA_2024": 0.0, "CA_2025": 852.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 487.5, "Total_CA": 852.0}, {"Client": "MAIRIE DE VILLEURBANNE", "CA_2024": 1250.0, "CA_2025": 765.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2015.0}, {"Client": "TRAVAIL ET CULTURE", "CA_2024": 0.0, "CA_2025": 708.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 708.0}, {"Client": "VILLEFRANCHE MEUBLES SA", "CA_2024": 0.0, "CA_2025": 690.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 690.0}, {"Client": "LADOBURN EUROPE LTD", "CA_2024": 0.0, "CA_2025": 590.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 590.0}, {"Client": "WHITE MIRROR", "CA_2024": 0.0, "CA_2025": 495.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 495.0}, {"Client": "CHARBONNIÈRES.CLUB", "CA_2024": 0.0, "CA_2025": 238.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 238.0}, {"Client": "BOTT", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "BEAM", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1869.78, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "MUSCO SEVE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 6541.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "OH!ACTIV'", "CA_2024": 1095.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1095.0}, {"Client": "NOURITURFU", "CA_2024": 375.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 375.0}, {"Client": "LE BRISCOPE (BRIGNAIS)", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 715.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "SATHONAY BLUES FESTIVAL", "CA_2024": 711.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 711.0}, {"Client": "SIVAM BY AUTOSPHERE", "CA_2024": 1857.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1857.0}, {"Client": "CHAMBRE DES NOTAIRES DU RHONE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1053.0, "Total_CA": 0.0}, {"Client": "ASSOCIATION DE PREFIGURATION DE LA CITE INTERNATIONALE DES ARTS DU CIRQUE", "CA_2024": 950.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 950.0}, {"Client": "MAIRIE DE MEYREUIL", "CA_2024": 1144.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1144.0}, {"Client": "THEATRE TETE D'OR", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 715.0, "Total_CA": 0.0}, {"Client": "IHMTEK", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2401.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "THE BLONDIE COOKIE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 675.0, "Total_CA": 0.0}, {"Client": "ASSOCIATION CULTURELLE DE L'ODYSSEE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 438.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 643.5, "Total_CA": 438.0}, {"Client": "KARECA", "CA_2024": 963.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 963.0}, {"Client": "CLUB LUDIQUE ARTISTIQUE PLURICULTUREL", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2230.0, "Off_2026": 1654.07, "Total_CA": 0.0}, {"Client": "SPORT DOMICILE", "CA_2024": 8326.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 8326.0}, {"Client": "ARTEMIS COURTAGE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1696.5, "Total_CA": 0.0}, {"Client": "THEATRE DE LA CROIX ROUSSE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 2800.0, "Off_2024": 0.0, "Off_2025": 515.5, "Off_2026": 2800.0, "Total_CA": 2800.0}, {"Client": "INST LUMIERE CINEMA AUD VISUEL", "CA_2024": 550.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2800.0, "Total_CA": 550.0}, {"Client": "CAPSULES ET BOUCHONS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1455.26, "Total_CA": 0.0}, {"Client": "KOODSHOW", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1453.5, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "MARCHE GARE", "CA_2024": 550.0, "CA_2025": 0.0, "CA_2026": 550.0, "Off_2024": 0.0, "Off_2025": 2250.0, "Off_2026": 438.75, "Total_CA": 1100.0}, {"Client": "CHAMBRE DE COMMERCE ET D'INDUSTRIE LYON METROPOLE-SAINT-ETIENNE ROANNE", "CA_2024": 3500.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3500.0}, {"Client": "MONSIEUR KEVIN NICOLINI", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1672.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "COMMUNAUTE DE COMMUNES SAONE-BEAUJOLAIS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 5100.2, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "L'OR NOIR", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1696.5, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "DOMAINE DE LA GARENNE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1500.0, "Total_CA": 0.0}, {"Client": "HUTTOPIA", "CA_2024": 1990.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1990.0}, {"Client": "PETIT FILS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 22625.32, "Off_2026": 1885.0, "Total_CA": 0.0}, {"Client": "AIX PERT MENUISERIES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 4466.45, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "LA LYRE AGRICOLE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1783.02, "Total_CA": 0.0}, {"Client": "MEDICIS ENCHERES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1696.5, "Total_CA": 0.0}, {"Client": "PERGAME CONSULTING", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 671.5, "Total_CA": 0.0}, {"Client": "SAS GERLAND FOR EVER", "CA_2024": 3100.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3100.0}, {"Client": "MILLON", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 945.25, "Total_CA": 0.0}, {"Client": "GIE VAPIANO", "CA_2024": 1989.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1989.0}, {"Client": "ACCT-CONSULTING", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 9612.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "COMMUNE DE RILLIEUX LA PAPE", "CA_2024": 2900.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 565.0, "Off_2026": 0.0, "Total_CA": 2900.0}, {"Client": "BAMBOO EDITION", "CA_2024": 1501.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1501.0}, {"Client": "LYON TRINITE MUSIQUE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1450.0, "Total_CA": 0.0}, {"Client": "CABINET BERTHIER ET ASSOCIES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 990.0, "Total_CA": 0.0}, {"Client": "SNC RILOUPE", "CA_2024": 3170.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3170.0}, {"Client": "COT DESIGN", "CA_2024": 997.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 997.0}, {"Client": "SIMULATION DEVIS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "TRV MENUISERIE", "CA_2024": 711.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 711.0}, {"Client": "L'ADDICT", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 800.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "OUI ALLO", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2350.0, "Total_CA": 0.0}, {"Client": "PATISSERIE PEPIN", "CA_2024": 6617.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 6617.0}, {"Client": "ASS DE GESTION DE LA VILLA GILLET", "CA_2024": 925.0, "CA_2025": 0.0, "CA_2026": 2638.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 550.0, "Total_CA": 3563.0}, {"Client": "NUTRITION SALON", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 516.0, "Total_CA": 0.0}, {"Client": "OFFICE DE TOURISME ET DES CONGRES DE VALENCE ROMANS SUD RHONE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 2465.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2465.0}, {"Client": "RESIDENCE HOTELIERE ET DE TOURISME DU GRAND LARGE", "CA_2024": 6186.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 6186.0}, {"Client": "BIETRY MUSIQUE", "CA_2024": 765.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 765.0}, {"Client": "G.E.M.", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 1450.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1450.0}, {"Client": "EKSTEND GROUP", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2218.5, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "FONDATION LEA ET NAPOLEON BULLUKIAN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1053.0, "Total_CA": 0.0}, {"Client": "IDEAL OPTIQUE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 990.0, "Total_CA": 0.0}, {"Client": "AUPALE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 440.52, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "ESPACE DES ARTS", "CA_2024": 765.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 765.0}, {"Client": "DOUNE MUSIC", "CA_2024": 1898.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1898.0}, {"Client": "N2MT", "CA_2024": 1990.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1990.0}, {"Client": "ASSOCIATION HANICIA DANSE", "CA_2024": 382.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 382.0}, {"Client": "KOACHER", "CA_2024": 650.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 650.0}, {"Client": "MAIRIE DE COLOMBIER SAUGNIEU", "CA_2024": 711.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 711.0}, {"Client": "REGIE AUTONOME LE TOBOGGAN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2331.0, "Total_CA": 0.0}, {"Client": "MAARVI", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1053.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "RENAULT RETAIL GROUP (ANCIEN)", "CA_2024": 2723.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2723.0}, {"Client": "NOMADE AVENTURE", "CA_2024": 1290.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1290.0}, {"Client": "SO CHIC DECO SARL (LYON 3)", "CA_2024": 2455.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2455.0}, {"Client": "B.P.M.", "CA_2024": 1395.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1395.0}, {"Client": "CENTRE DE RENOVATION DE VEHICULES D'OCCASION LYON - CRVO LYON", "CA_2024": 4967.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 4967.0}, {"Client": "MONSIEUR BERTRAND CONNIN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 671.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1087.83, "Total_CA": 671.0}, {"Client": "ESPRIT VELO", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 130.0, "Total_CA": 0.0}, {"Client": "PADEL SHOT LYON", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 900.0, "Total_CA": 0.0}, {"Client": "PREFECTURE DE REGION AUVERGNE-RHONE-ALPES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1885.0, "Total_CA": 0.0}, {"Client": "OFFICE DE TOURISME DES BALCONS DU DAUPHINE", "CA_2024": 2610.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2610.0, "Total_CA": 2610.0}, {"Client": "COT AMEUBLEMENT (ANNECY)", "CA_2024": 1273.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1273.0}, {"Client": "CIM", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1885.0, "Total_CA": 0.0}, {"Client": "COP - LES PUCES DU CANAL", "CA_2024": 1050.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 990.0, "Off_2026": 0.0, "Total_CA": 1050.0}, {"Client": "SOCIETE DES COURSES LYONNAISES", "CA_2024": 1900.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1900.0}, {"Client": "OG CLEAN FUELS FRANCE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1170.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "AUTOMATISME PIDOUX FRERES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2266.83, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "FORTUNY", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 891.0, "Total_CA": 0.0}, {"Client": "LES PETITS LIONS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1853.02, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "L'ERE DU FEU", "CA_2024": 662.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 662.0}, {"Client": "MJC DU VIEUX LYON", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 487.5, "Total_CA": 0.0}, {"Client": "TAJAN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1696.5, "Total_CA": 0.0}, {"Client": "THEATRE A L'OUEST", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1159.0, "Total_CA": 0.0}, {"Client": "ACADEMIE DE CUIVRES EN DOMBES", "CA_2024": 3946.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 5273.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 3946.0}, {"Client": "LES SERRES DE JOSEPH", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 487.5, "Total_CA": 0.0}, {"Client": "BRIGAND CONCEPT STORE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1005.7, "Total_CA": 0.0}, {"Client": "FORCE 1 PUBLICITE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 3121.15, "Total_CA": 0.0}, {"Client": "WAWI", "CA_2024": 1215.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1215.0}, {"Client": "OFFICE DE TOURSIME DU PUY EN VELAY", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "SPEAKER", "CA_2024": 2950.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 2950.0}, {"Client": "MONSIEUR GAEL JANIN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1745.0, "Total_CA": 0.0}, {"Client": "ASSOCIATION CONTRASTS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 487.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1235.0, "Total_CA": 487.0}, {"Client": "SARL MOULIN DE MARTOREY", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1620.0, "Total_CA": 0.0}, {"Client": "LIBELLUL' BIJOUX", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 666.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "LES DERNIERS COUCHES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 3078.0, "Off_2024": 0.0, "Off_2025": 1235.0, "Off_2026": 0.0, "Total_CA": 3078.0}, {"Client": "PIGNOL", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2050.0, "Total_CA": 0.0}, {"Client": "COMMUNE DE CHASSIEU", "CA_2024": 1137.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 3820.0, "Off_2026": 0.0, "Total_CA": 1137.0}, {"Client": "EXPERTISE MENUISERIES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 732.63, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "URBAN DECO", "CA_2024": 5458.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 5458.0}, {"Client": "SEMA E", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2822.85, "Off_2026": 1696.5, "Total_CA": 0.0}, {"Client": "WELCOME TRAVEL TECHNOLOGIES HOLDINGS LTD", "CA_2024": 800.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 800.0}, {"Client": "COMPAGNIE DISTRIBUTION DE SIEGES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1113.84, "Total_CA": 0.0}, {"Client": "COT CONTEMPORAIN SAS", "CA_2024": 1341.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1341.0}, {"Client": "INTER BEAUJOLAIS", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 4428.9, "Total_CA": 0.0}, {"Client": "SONAURA", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 9988.4, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "VIENNE CONDRIEU TOURISME", "CA_2024": 13433.0, "CA_2025": 0.0, "CA_2026": 6220.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 943.25, "Total_CA": 19653.0}, {"Client": "REGION AUVERGNE-RHONE-ALPES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 2900.0, "Off_2025": 4595.99, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "COMMUNE DE CALUIRE ET CUIRE", "CA_2024": 2465.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 3770.0, "Off_2026": 0.0, "Total_CA": 2465.0}, {"Client": "LE CERF-VOLANT", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1080.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "EMERGENCE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 3536.0, "Total_CA": 0.0}, {"Client": "LE DOMAINE DES PRES VERTS", "CA_2024": 1678.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1678.0}, {"Client": "ENVI QUART", "CA_2024": 863.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 863.0}, {"Client": "B.P.S", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 5948.3, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "KLH", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 4437.0, "Total_CA": 0.0}, {"Client": "MAIRIE DE BRIGNAIS", "CA_2024": 864.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 2030.0, "Off_2026": 0.0, "Total_CA": 864.0}, {"Client": "CARLA", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "OKEN", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 891.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "LA PIZZA DE NICO", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 765.0, "Total_CA": 0.0}, {"Client": "LA SAONE SWINGUE", "CA_2024": 422.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 422.0}, {"Client": "TRUTH PARE BRISE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 1290.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "SOC LYON PARC AUTO POUR REALISAT GESTION", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 643.5, "Total_CA": 0.0}, {"Client": "AASGARD LIMONEST", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 2325.2, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "COMMUNAUTE COMMUNES VALLONS DU LYONNAIS", "CA_2024": 711.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 715.0, "Off_2026": 0.0, "Total_CA": 711.0}, {"Client": "MONSIEUR GEORGES HEITZMANN", "CA_2024": 5280.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 5280.0}, {"Client": "ACADEMIE LYONNAISE DE PEINTURE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 438.75, "Total_CA": 0.0}, {"Client": "GLOBE ET CECIL HOTEL", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 1836.25, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "SARL ATALANTE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1170.0, "Total_CA": 0.0}, {"Client": "YCLA", "CA_2024": 790.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 790.0}, {"Client": "ECHANGES FRANCOPHONES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 990.0, "Total_CA": 0.0}, {"Client": "ARNOULD CONSEIL", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 3504.5, "Total_CA": 0.0}, {"Client": "AGENCE WELCOMM", "CA_2024": 1165.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1165.0}, {"Client": "FELIX FAURE AUTOMOBILES", "CA_2024": 1915.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 9074.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 1915.0}, {"Client": "LAPEYRE", "CA_2024": 4499.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 0.0, "Total_CA": 4499.0}, {"Client": "AMATEURS D AUTOMOBILES ANCIENNES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 2975.85, "Total_CA": 0.0}, {"Client": "MLB LYON 6", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1170.0, "Total_CA": 0.0}, {"Client": "ETS R & J TONDEUR", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 70.0, "Off_2026": 0.0, "Total_CA": 0.0}, {"Client": "HEROINES", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 1450.0, "Total_CA": 0.0}, {"Client": "EDITIONS EN CAVALE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 487.5, "Total_CA": 0.0}, {"Client": "ELDORADO ET CIE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 3420.0, "Total_CA": 0.0}, {"Client": "THEATRE DE L'INEDIT BISTROT DE LA SCENE", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 373.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 607.5, "Total_CA": 373.0}, {"Client": "SYLVIE COLON", "CA_2024": 0.0, "CA_2025": 0.0, "CA_2026": 0.0, "Off_2024": 0.0, "Off_2025": 0.0, "Off_2026": 675.0, "Total_CA": 0.0}];
+const OBJECTIF = 538200;
+const STORAGE_KEY = 'crm_1iy5hh6481';
+
+let sortKey = 'CA_2025', sortDir = -1, currentFilter = 'all';
+let comments = {}, potentiels = {}, pistes = [];
+
+function loadAll() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) { const d = JSON.parse(s); comments = d.comments||{}; potentiels = d.potentiels||{}; pistes = d.pistes||[]; }
+  } catch(e) {}
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({comments, potentiels, pistes}));
+    const btn = document.getElementById('save-btn');
+    btn.textContent = '✅ Sauvegardé !'; btn.classList.add('saved');
+    document.getElementById('last-save').textContent = 'Sauvegardé ' + new Date().toLocaleTimeString('fr-FR');
+    setTimeout(() => { btn.textContent = '💾 Sauvegarder'; btn.classList.remove('saved'); }, 2000);
+  } catch(e) {}
+}
+
+function fmt(val) {
+  if (!val || val === 0) return '<span class="num num-zero">—</span>';
+  return '<span class="num">' + Math.round(val).toLocaleString('fr-FR') + '&nbsp;€</span>';
+}
+
+function fmtEvol(ca24, ca25) {
+  if (ca24===0 && ca25===0) return '<span class="num num-zero">—</span>';
+  if (ca24===0) return '<span class="num num-pos">Nouveau</span>';
+  if (ca25===0) return '<span class="num num-neg">−100%</span>';
+  const p = ((ca25-ca24)/ca24*100).toFixed(1);
+  return `<span class="num ${p>=0?'num-pos':'num-neg'}">${p>=0?'+':''}${p}%</span>`;
+}
+
+function getStatus(row) {
+  const {CA_2024:c4, CA_2025:c5, CA_2026:c6, Off_2024:o4, Off_2025:o5, Off_2026:o6} = row;
+  if (row._piste) return 'piste';
+  if (c4===0 && (c5>0||c6>0)) return 'nouveau';
+  if (c5===0 && c4>0 && c6===0) return 'perdu';
+  if (c6>0) return 'ca26';
+  if (c5>c4*1.05 && c4>0) return 'hausse';
+  if (c5<c4*0.95 && c5>0) return 'baisse';
+  if ((o4+o5+o6)>0) return 'offre';
+  if (c5>0) return 'actif';
+  return 'autre';
+}
+
+function statusPill(st) {
+  const map = {
+    actif:['sp-actif','✓ Actif'], hausse:['sp-hausse','↑ En hausse'], baisse:['sp-baisse','↓ En baisse'],
+    perdu:['sp-perdu','✗ Perdu'], nouveau:['sp-nouveau','★ Nouveau'], offre:['sp-offre','◎ Offre'],
+    ca26:['sp-ca26','✔ CA 2026'], piste:['sp-piste','⭐ Piste'], autre:['sp-actif','·']
+  };
+  const [cls, lbl] = map[st]||['sp-actif', st];
+  return `<span class="status-pill ${cls}">${lbl}</span>`;
+}
+
+function getPistesTotal() { return pistes.reduce((s,p) => s+(parseFloat(p.montant)||0), 0); }
+
+function updateStats() {
+  const ca24 = DATA.reduce((s,r) => s+r.CA_2024, 0);
+  const ca25 = DATA.reduce((s,r) => s+r.CA_2025, 0);
+  const ca26 = DATA.reduce((s,r) => s+r.CA_2026, 0);
+  const actifs = DATA.filter(r => r.CA_2025>0).length;
+  const perdus = DATA.filter(r => r.CA_2024>0 && r.CA_2025===0 && r.CA_2026===0).length;
+  let pot = 0;
+  document.querySelectorAll('.pot-input').forEach(i => pot += parseFloat(i.value)||0);
+  const pisteTot = getPistesTotal();
+  const total = ca26 + pot + pisteTot;
+
+  document.getElementById('s-ca24').textContent = Math.round(ca24).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-ca25').textContent = Math.round(ca25).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-ca26').textContent = Math.round(ca26).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-pot').textContent = Math.round(pot).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-pistes').textContent = Math.round(pisteTot).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-total').textContent = Math.round(total).toLocaleString('fr-FR')+' €';
+  document.getElementById('s-actifs').textContent = actifs;
+  document.getElementById('s-perdus').textContent = perdus;
+
+  if (OBJECTIF > 0) {
+    document.getElementById('obj-block').style.display = 'flex';
+    document.getElementById('o-obj').textContent = Math.round(OBJECTIF).toLocaleString('fr-FR')+' €';
+    document.getElementById('o-signe').textContent = Math.round(ca26).toLocaleString('fr-FR')+' €';
+    document.getElementById('o-prev').textContent = Math.round(total).toLocaleString('fr-FR')+' €';
+    const reste = OBJECTIF - total;
+    const el = document.getElementById('o-reste');
+    el.textContent = Math.round(Math.abs(reste)).toLocaleString('fr-FR')+' €'+(reste>0?' à faire':' au-dessus');
+    el.className = reste>0 ? 'reste-neg' : 'reste-pos';
+    const pct = Math.min(100, Math.round(total/OBJECTIF*100));
+    document.getElementById('o-pct').textContent = pct+'%';
+    document.getElementById('o-bar').style.width = pct+'%';
+    document.getElementById('o-bar').style.background = pct>=100?'#4CAF50':pct>=70?'linear-gradient(90deg,#FF9800,#FFD700)':'linear-gradient(90deg,#F44336,#FF9800)';
+  }
+}
+
+function renderPistes() {
+  const list = document.getElementById('piste-list');
+  list.innerHTML = '';
+  let total = 0;
+  pistes.forEach((p, i) => {
+    total += parseFloat(p.montant)||0;
+    const div = document.createElement('div');
+    div.className = 'piste-item';
+    div.innerHTML = `<span>⭐</span><span class="piste-nom">${p.nom}</span><span class="piste-mt">${Math.round(p.montant||0).toLocaleString('fr-FR')} €</span><button class="piste-del" data-i="${i}">×</button>`;
+    list.appendChild(div);
+  });
+  document.getElementById('piste-total-val').textContent = Math.round(total).toLocaleString('fr-FR')+' €';
+  list.querySelectorAll('.piste-del').forEach(btn => {
+    btn.addEventListener('click', function() {
+      pistes.splice(parseInt(this.dataset.i), 1);
+      renderPistes(); render(); saveAll();
+    });
+  });
+}
+
+function addPiste() {
+  const nom = document.getElementById('piste-nom').value.trim();
+  const mt = parseFloat(document.getElementById('piste-mt').value)||0;
+  if (!nom) { document.getElementById('piste-nom').focus(); return; }
+  pistes.push({nom, montant: mt});
+  document.getElementById('piste-nom').value = '';
+  document.getElementById('piste-mt').value = '';
+  renderPistes(); render(); saveAll();
+  document.getElementById('piste-nom').focus();
+}
+
+// Enter key on piste form
+document.getElementById('piste-nom').addEventListener('keydown', e => { if (e.key==='Enter') addPiste(); });
+document.getElementById('piste-mt').addEventListener('keydown', e => { if (e.key==='Enter') addPiste(); });
+
+function getAllRows() {
+  // Real clients + pistes as virtual rows
+  const rows = DATA.map(r => ({...r, _piste: false}));
+  pistes.forEach(p => {
+    rows.push({
+      Client: p.nom + ' ⭐',
+      CA_2024: 0, CA_2025: 0, CA_2026: 0,
+      Off_2024: 0, Off_2025: 0, Off_2026: 0,
+      _piste: true, _pisteMontant: parseFloat(p.montant)||0
+    });
+  });
+  return rows;
+}
+
+function getFilteredRows() {
+  const search = document.getElementById('search').value.toLowerCase();
+  let rows = getAllRows();
+  if (search) rows = rows.filter(r => r.Client.toLowerCase().includes(search));
+  if (currentFilter !== 'all') {
+    rows = rows.filter(r => {
+      const st = getStatus(r);
+      const pkey = 'pot::' + r.Client;
+      if (currentFilter==='actif') return ['actif','hausse','baisse','ca26'].includes(st);
+      if (currentFilter==='perdu') return st==='perdu';
+      if (currentFilter==='nouveau') return st==='nouveau';
+      if (currentFilter==='ca26') return r.CA_2026>0;
+      if (currentFilter==='offre') return (r.Off_2024+r.Off_2025+r.Off_2026)>0;
+      if (currentFilter==='pot') return potentiels[pkey]>0;
+      if (currentFilter==='comment') return comments[r.Client] && comments[r.Client].trim()!=='';
+      if (currentFilter==='piste') return r._piste;
+      return true;
+    });
+  }
+  rows.sort((a,b) => {
+    if (sortKey==='Client') return sortDir*a.Client.localeCompare(b.Client);
+    if (sortKey==='pot') {
+      const pa = potentiels['pot::'+a.Client]||0, pb = potentiels['pot::'+b.Client]||0;
+      return sortDir*(pa-pb);
+    }
+    return sortDir*((a[sortKey]||0)-(b[sortKey]||0));
+  });
+  return rows;
+}
+
+function render() {
+  const rows = getFilteredRows();
+  document.getElementById('count-info').textContent = rows.length+' ligne(s) affichée(s) sur '+(DATA.length+pistes.length);
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const ckey = row.Client;
+    const pkey = 'pot::' + row.Client;
+    const comment = row._piste ? '' : (comments[ckey]||'');
+    const pot = row._piste ? row._pisteMontant : (potentiels[pkey]||'');
+    const st = getStatus(row);
+    const tr = document.createElement('tr');
+    if (st==='perdu') tr.className='row-perdu';
+    else if (st==='nouveau') tr.className='row-nouveau';
+    else if (st==='piste') tr.className='row-piste';
+    tr.innerHTML = `
+      <td><span class="client-name">${row.Client}</span></td>
+      <td class="col-ca24">${fmt(row.CA_2024)}</td>
+      <td class="col-ca25">${fmt(row.CA_2025)}</td>
+      <td class="col-ca26">${fmt(row.CA_2026)}</td>
+      <td class="col-evol">${fmtEvol(row.CA_2024, row.CA_2025)}</td>
+      <td class="col-off24">${fmt(row.Off_2024)}</td>
+      <td class="col-off25">${fmt(row.Off_2025)}</td>
+      <td class="col-off26">${fmt(row.Off_2026)}</td>
+      <td class="col-statut">${statusPill(st)}</td>
+      <td class="col-comment">${row._piste ? '<em style="color:#aaa;font-size:0.75rem">piste</em>' : `<textarea class="comment-text ${comment?'has-comment':''}" data-key="${ckey}" rows="1">${comment}</textarea>`}</td>
+      <td class="col-pot">${row._piste ? `<span class="num num-pos">${Math.round(row._pisteMontant).toLocaleString('fr-FR')}&nbsp;€</span>` : `<input type="number" class="pot-input" data-pkey="${pkey}" value="${pot}" placeholder="—" min="0" step="100"/>`}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.comment-text').forEach(ta => {
+    ta.addEventListener('input', function() {
+      comments[this.dataset.key] = this.value;
+      this.classList.toggle('has-comment', this.value.trim()!=='');
+    });
+    ta.addEventListener('blur', saveAll);
+  });
+  tbody.querySelectorAll('.pot-input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      potentiels[this.dataset.pkey] = parseFloat(this.value)||0;
+      updateStats();
+    });
+    inp.addEventListener('blur', saveAll);
+  });
+
+  applyColVisibility();
+  updateStats();
+}
+
+function applyColVisibility() {
+  document.querySelectorAll('.col-cb').forEach(cb => {
+    document.querySelectorAll('.'+cb.dataset.col).forEach(el => el.classList.toggle('hidden-col', !cb.checked));
+  });
+}
+
+function sortTable(key) {
+  if (sortKey===key) sortDir*=-1; else {sortKey=key; sortDir=key==='Client'?1:-1;}
+  render();
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    currentFilter = this.dataset.filter;
+    render();
+  });
+});
+document.querySelectorAll('.col-cb').forEach(cb => cb.addEventListener('change', applyColVisibility));
+
+loadAll();
+renderPistes();
+render();
+setInterval(saveAll, 30000);
+</script>
+</body>
+</html>
